@@ -1,0 +1,31 @@
+{
+  "name": "app-thesmart",
+  "version": "1.0.0",
+  "description": "Lê um relatório de renovação em PDF, extrai os clientes com OpenAI e cria cartões no Trello.",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "serve": "node dist/index.js",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "trello",
+    "openai",
+    "pdf",
+    "renovacao"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "openai": "^4.67.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@types/pdf-parse": "^1.1.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

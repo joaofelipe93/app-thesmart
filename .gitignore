@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Relatórios reais contêm dados de clientes (PII) — nunca versionar
+*.pdf
