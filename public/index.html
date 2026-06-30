@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TheSmart · Renovações no Trello</title>
+    <style>
+      :root {
+        --azul: #0c66e4;
+        --azul-escuro: #09326c;
+        --cinza: #f4f5f7;
+        --borda: #dfe1e6;
+        --texto: #172b4d;
+        --verde: #1f845a;
+        --vermelho: #c9372c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--cinza);
+        color: var(--texto);
+        line-height: 1.5;
+      }
+      .container { max-width: 720px; margin: 0 auto; padding: 32px 20px; }
+      h1 { font-size: 22px; margin: 0 0 4px; }
+      .sub { color: #5e6c84; margin: 0 0 24px; }
+      .card {
+        background: #fff;
+        border: 1px solid var(--borda);
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 2px rgba(9, 30, 66, 0.08);
+      }
+      .drop {
+        border: 2px dashed var(--borda);
+        border-radius: 8px;
+        padding: 32px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .drop:hover, .drop.ativo { border-color: var(--azul); background: #f0f6ff; }
+      .drop strong { color: var(--azul-escuro); }
+      .drop small { color: #5e6c84; }
+      #nomeArquivo { margin-top: 12px; font-weight: 600; color: var(--azul-escuro); }
+      button {
+        margin-top: 20px;
+        width: 100%;
+        background: var(--azul);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: var(--azul-escuro); }
+      button:disabled { background: #a5adba; cursor: not-allowed; }
+      #log {
+        margin-top: 20px;
+        background: #fbfbfb;
+        border: 1px solid var(--borda);
+        border-radius: 6px;
+        padding: 12px 14px;
+        max-height: 280px;
+        overflow-y: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        display: none;
+      }
+      #log .ok { color: var(--verde); }
+      #log .skip { color: #5e6c84; }
+      #log .err { color: var(--vermelho); }
+      #resumo {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 6px;
+        display: none;
+        font-weight: 600;
+      }
+      #resumo.sucesso { background: #e3fcef; color: var(--verde); }
+      #resumo.falha { background: #ffeceb; color: var(--vermelho); }
+      .hint { margin-top: 16px; font-size: 13px; color: #5e6c84; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Renovações → Trello</h1>
+      <p class="sub">Suba o relatório de renovação em PDF. A aplicação cria os cartões no Trello automaticamente.</p>
+
+      <div class="card">
+        <label class="drop" id="drop">
+          <input type="file" id="arquivo" accept="application/pdf,.pdf" hidden />
+          <div><strong>Clique para escolher</strong> ou arraste o PDF aqui</div>
+          <small>O mês é detectado pelo nome do arquivo (ex.: ..._Agosto_2026.pdf)</small>
+          <div id="nomeArquivo"></div>
+        </label>
+
+        <button id="processar" disabled>Processar</button>
+
+        <div id="resumo"></div>
+        <div id="log"></div>
+      </div>
+
+      <p class="hint">Reprocessar o mesmo relatório é seguro: clientes que já têm cartão são pulados, não duplicados.</p>
+    </div>
+
+    <script>
+      const inputArquivo = document.getElementById("arquivo");
+      const drop = document.getElementById("drop");
+      const nomeArquivo = document.getElementById("nomeArquivo");
+      const botao = document.getElementById("processar");
+      const log = document.getElementById("log");
+      const resumo = document.getElementById("resumo");
+
+      let arquivoSelecionado = null;
+
+      function selecionar(file) {
+        if (!file) return;
+        arquivoSelecionado = file;
+        nomeArquivo.textContent = file.name;
+        botao.disabled = false;
+      }
+
+      inputArquivo.addEventListener("change", (e) => selecionar(e.target.files[0]));
+
+      ["dragover", "dragenter"].forEach((ev) =>
+        drop.addEventListener(ev, (e) => {
+          e.preventDefault();
+          drop.classList.add("ativo");
+        }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        drop.addEventListener(ev, (e) => {
+          e.preventDefault();
+          drop.classList.remove("ativo");
+        }),
+      );
+      drop.addEventListener("drop", (e) => selecionar(e.dataTransfer.files[0]));
+
+      function addLog(texto, classe) {
+        log.style.display = "block";
+        const linha = document.createElement("div");
+        if (classe) linha.className = classe;
+        linha.textContent = texto;
+        log.appendChild(linha);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function classeDoLog(msg) {
+        if (msg.startsWith("  ✓")) return "ok";
+        if (msg.startsWith("  •")) return "skip";
+        return null;
+      }
+
+      botao.addEventListener("click", async () => {
+        if (!arquivoSelecionado) return;
+
+        botao.disabled = true;
+        botao.textContent = "Processando...";
+        log.innerHTML = "";
+        log.style.display = "none";
+        resumo.style.display = "none";
+        resumo.className = "";
+
+        const form = new FormData();
+        form.append("relatorio", arquivoSelecionado);
+
+        try {
+          const resp = await fetch("/processar", { method: "POST", body: form });
+          const reader = resp.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let idx;
+            while ((idx = buffer.indexOf("\n")) >= 0) {
+              const linha = buffer.slice(0, idx).trim();
+              buffer = buffer.slice(idx + 1);
+              if (!linha) continue;
+              tratarEvento(JSON.parse(linha));
+            }
+          }
+        } catch (e) {
+          mostrarResumo(false, "Falha de conexão com o servidor: " + e.message);
+        } finally {
+          botao.disabled = false;
+          botao.textContent = "Processar";
+        }
+      });
+
+      function tratarEvento(ev) {
+        if (ev.tipo === "log") {
+          addLog(ev.msg, classeDoLog(ev.msg));
+        } else if (ev.tipo === "fim") {
+          const r = ev.resultado;
+          const criados = r.cartoes.length;
+          let txt = `Concluído! ${criados} cartão(ões) criado(s) na lista "${r.lista}".`;
+          if (r.pulados > 0) txt += ` ${r.pulados} já existia(m) e foi(ram) pulado(s).`;
+          mostrarResumo(true, txt);
+        } else if (ev.tipo === "erro") {
+          addLog(ev.msg, "err");
+          mostrarResumo(false, "Erro: " + ev.msg);
+        }
+      }
+
+      function mostrarResumo(sucesso, texto) {
+        resumo.textContent = texto;
+        resumo.className = sucesso ? "sucesso" : "falha";
+        resumo.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

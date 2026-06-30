@@ -32,14 +32,29 @@ cp .env.example .env   # preencha as chaves
 
 ## Uso
 
+### Interface web (recomendado para o dia a dia)
+
+```bash
+npm run web
+```
+
+Abra **http://localhost:3000** no navegador, arraste o PDF (ou clique para escolher),
+e clique em **Processar**. O progresso aparece ao vivo e, no fim, um resumo de quantos
+cartões foram criados e quantos já existiam. As chaves ficam no `.env` da máquina —
+quem usa não precisa mexer em nada disso.
+
+A porta pode ser mudada com a variável `PORT`.
+
+### Linha de comando (alternativa)
+
 ```bash
 npm start ./Relatorio_renovacao_Agosto-2026.pdf
 npm test          # roda os testes (sem rede)
 npm run typecheck # checagem de tipos
 ```
 
-Para outros meses, basta o nome do arquivo conter o mês (ex.: `..._Setembro-2026.pdf`),
-que o quadro/lista são nomeados automaticamente (`SETEMBRO - PROCESSO DE VENDA`,
+Em ambos os casos, basta o nome do arquivo conter o mês (ex.: `..._Setembro-2026.pdf`)
+para o quadro/lista serem nomeados automaticamente (`SETEMBRO - PROCESSO DE VENDA`,
 `RENOVAÇÕES - SETEMBRO`).
 
 ## Variáveis de ambiente
@@ -59,6 +74,7 @@ permite testar o fluxo inteiro sem chamar OpenAI/Trello de verdade).
 ```
 src/
   index.ts             # composition root (CLI): lê o .env e liga os adaptadores
+  server.ts            # composition root (web): Express + upload + progresso ao vivo
   config.ts            # lê as variáveis de ambiente
   naming.ts            # detecta o mês e monta os nomes do quadro/lista
   domain/
@@ -71,5 +87,10 @@ src/
     pdfLeitor.ts       # PDF -> texto
     openaiExtrator.ts  # OpenAI -> lista de clientes
     trelloDestino.ts   # quadro, lista, cartões, checklist, etiquetas
+public/
+  index.html           # a página da interface web (sem build, sem dependências)
 tests/                 # testes (node:test), rodam com fakes, sem rede
 ```
+
+A CLI (`index.ts`) e a web (`server.ts`) são duas "portas de entrada" diferentes
+para o mesmo núcleo (`pipeline.ts`) — nenhuma lógica é duplicada.

@@ -10,11 +10,13 @@ CLI em TypeScript/Node que lê um relatório de renovação de seguros em **PDF*
 
 ```bash
 npm install
-npm start ./Relatorio_renovacao_Agosto-2026.pdf   # roda via tsx (dev)
+npm start ./Relatorio_renovacao_Agosto-2026.pdf   # CLI, via tsx (dev)
+npm run web                                         # GUI web em http://localhost:3000 (PORT muda a porta)
 npm test                                            # node:test + tsx (sem rede)
 npm run typecheck                                   # tsc --noEmit (checa tudo, inclusive testes)
 npm run build                                       # tsc -p tsconfig.build.json -> dist/ (exclui *.test.ts)
-npm run serve                                       # node dist/index.js (após build)
+npm run serve                                       # node dist/index.js  (CLI, após build)
+npm run web:serve                                   # node dist/server.js (GUI, após build)
 ```
 
 Não há linter. Testes ficam em `tests/` (fora de `src/`), usam `node:test` + `node:assert/strict` e rodam via `node --import tsx`; importam o código de produção via `../src/...`. O `tsconfig.json` base inclui `src` + `tests` (é o que o `typecheck` usa); o `tsconfig.build.json` define `rootDir: src`/`outDir: dist` e inclui só `src`, para o build gerar apenas o código de produção em `dist/`.
@@ -28,7 +30,8 @@ Requer **Node 18+** (usa `fetch` nativo) e um `.env` (veja `.env.example`): `OPE
 - `domain/types.ts` — tipos (`Cliente`, `*Ref`) e as **portas**: `LeitorRelatorio`, `ExtratorClientes`, `DestinoCartoes` (esta inclui `cartoesExistentes`, `criarCartao`, `adicionarChecklist`, `aplicarEtiqueta`). `domain/formatters.ts` tem `descricaoDoCartao` (puro); `domain/etapas.ts` tem o nome e os itens do checklist fixo.
 - `app/pipeline.ts` — `processarRelatorio(caminho, deps)`: o **núcleo**. Recebe as portas por injeção e orquestra ler → extrair → publicar. Para cada cliente: pula se já existe na lista, senão cria cartão + checklist + (se houver vencimento) etiqueta. Não importa nada de OpenAI/Trello/PDF nem de `config`, por isso roda igual com adaptadores reais ou com fakes.
 - `adapters/` — implementações concretas: `PdfLeitor`, `OpenAiExtrator` (recebe `apiKey`/`model` no construtor), `TrelloDestino` (recebe `apiKey`/`token`).
-- `index.ts` — **composition root**: único lugar que lê `config` e instancia os adaptadores, passando-os ao pipeline. Em teste, o pipeline é exercido com fakes, então `config` (que lança no import se faltar env var) nunca é tocado.
+- `index.ts` (CLI) e `server.ts` (web) — **dois composition roots** para o mesmo núcleo. Cada um lê `config`, instancia os adaptadores e chama `processarRelatorio`. Em teste, o pipeline é exercido com fakes, então `config` (que lança no import se faltar env var) nunca é tocado.
+  - `server.ts`: Express. Serve `public/index.html` (estático, sem build) e expõe `POST /processar`. O upload usa `multer` com **diskStorage que preserva o nome original** (o mês depende dele) num diretório temp único, apagado ao fim. A resposta é **NDJSON em streaming**: o callback `log` do pipeline vira eventos `{tipo:"log"}` enviados ao vivo, seguidos de `{tipo:"fim", resultado}` ou `{tipo:"erro"}`. O front lê o stream e mostra progresso + resumo. `public/` é resolvido via `process.cwd()`, então rode pela raiz do projeto (os scripts npm já fazem isso).
 
 Detalhes que só se entende lendo o código:
 
