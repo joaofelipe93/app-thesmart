@@ -4,6 +4,18 @@ import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { exec } from "node:child_process";
+
+/** Abre a URL no navegador padrão do sistema (Windows, macOS ou Linux). */
+function abrirNavegador(url: string): void {
+  const comando =
+    process.platform === "win32"
+      ? `start "" "${url}"`
+      : process.platform === "darwin"
+        ? `open "${url}"`
+        : `xdg-open "${url}"`;
+  exec(comando, () => {});
+}
 
 import { config } from "./config";
 import { PdfLeitor } from "./adapters/pdfLeitor";
@@ -70,5 +82,9 @@ app.post("/processar", upload.single("relatorio"), async (req, res) => {
 
 const porta = Number(process.env.PORT) || 3000;
 app.listen(porta, () => {
-  console.log(`GUI disponível em http://localhost:${porta}`);
+  const url = `http://localhost:${porta}`;
+  console.log(`GUI disponível em ${url}`);
+  if (process.env.ABRIR_NAVEGADOR !== "false") {
+    abrirNavegador(url);
+  }
 });

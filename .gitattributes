@@ -1,0 +1,2 @@
+# Garante que os scripts .bat fiquem com quebras de linha do Windows (CRLF).
+*.bat text eol=crlf

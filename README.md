@@ -34,16 +34,22 @@ cp .env.example .env   # preencha as chaves
 
 ### Interface web (recomendado para o dia a dia)
 
+**No Windows**, depois de configurar o `.env` (veja abaixo), é só dar **duplo-clique em `iniciar.bat`**.
+Na primeira vez ele instala as dependências sozinho; nas próximas, sobe a aplicação e
+**abre o navegador automaticamente**. Para encerrar, feche a janela preta.
+
+Em qualquer sistema, pela linha de comando:
+
 ```bash
 npm run web
 ```
 
-Abra **http://localhost:3000** no navegador, arraste o PDF (ou clique para escolher),
-e clique em **Processar**. O progresso aparece ao vivo e, no fim, um resumo de quantos
-cartões foram criados e quantos já existiam. As chaves ficam no `.env` da máquina —
-quem usa não precisa mexer em nada disso.
+Abra **http://localhost:3000** no navegador (ele abre sozinho), arraste o PDF (ou clique
+para escolher) e clique em **Processar**. O progresso aparece ao vivo e, no fim, um resumo
+de quantos cartões foram criados e quantos já existiam. As chaves ficam no `.env` da
+máquina — quem usa não precisa mexer em nada disso.
 
-A porta pode ser mudada com a variável `PORT`.
+A porta pode ser mudada com `PORT`; o navegador não abre sozinho se `ABRIR_NAVEGADOR=false`.
 
 ### Linha de comando (alternativa)
 
