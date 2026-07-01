@@ -40,12 +40,26 @@ if not exist "node_modules\" (
   )
 )
 
+REM Compila o TypeScript na primeira vez. Nas proximas, reaproveita o dist.
+REM (Se voce atualizar o programa, apague a pasta "dist" para recompilar.)
+if not exist "dist\server.js" (
+  echo Compilando a aplicacao pela primeira vez...
+  echo.
+  call npm run build
+  if errorlevel 1 (
+    echo.
+    echo [ERRO] Falha ao compilar a aplicacao.
+    pause
+    exit /b 1
+  )
+)
+
 echo.
 echo Iniciando a aplicacao. O navegador vai abrir sozinho em instantes.
 echo Para ENCERRAR, feche esta janela.
 echo.
 
-call npm run web
+call npm run web:serve
 
 echo.
 echo A aplicacao foi encerrada.
