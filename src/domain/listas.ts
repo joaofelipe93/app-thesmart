@@ -9,4 +9,5 @@ export const LISTAS_FLUXO: readonly string[] = [
   "Transmitir proposta",
   "Enviar msg Ass 24h e Aplicativo da seguradora",
   "Apólices emitidas",
+  "Não fechado",
 ];
