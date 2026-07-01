@@ -69,8 +69,12 @@ A aplicação precisa de 3 chaves para funcionar. Elas ficam num arquivo chamado
 
 1. Abra a pasta da aplicação.
 2. Dê **duplo-clique em `iniciar.bat`**.
-3. Na **primeira vez**, ele instala as dependências — isso pode levar alguns minutos.
-   Aguarde até o navegador abrir sozinho.
+3. Na **primeira vez**, ele instala as dependências e compila a aplicação — isso
+   pode levar alguns minutos. Aguarde até o navegador abrir sozinho.
+4. Nas próximas vezes ele já pula essas etapas e abre rapidinho.
+
+> **Ao atualizar o programa** (baixar uma versão nova): apague a pasta `dist` antes
+> de abrir o `iniciar.bat`, para ele recompilar com o código novo.
 
 ---
 

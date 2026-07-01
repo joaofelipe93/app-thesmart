@@ -32,7 +32,7 @@ Requer **Node 18+** (usa `fetch` nativo) e um `.env` (veja `.env.example`): `OPE
 - `adapters/` — implementações concretas: `PdfLeitor`, `OpenAiExtrator` (recebe `apiKey`/`model` no construtor), `TrelloDestino` (recebe `apiKey`/`token`).
 - `index.ts` (CLI) e `server.ts` (web) — **dois composition roots** para o mesmo núcleo. Cada um lê `config`, instancia os adaptadores e chama `processarRelatorio`. Em teste, o pipeline é exercido com fakes, então `config` (que lança no import se faltar env var) nunca é tocado.
   - `server.ts`: Express. Serve `public/index.html` (estático, sem build) e expõe `POST /processar`. O upload usa `multer` com **diskStorage que preserva o nome original** (o mês depende dele) num diretório temp único, apagado ao fim. A resposta é **NDJSON em streaming**: o callback `log` do pipeline vira eventos `{tipo:"log"}` enviados ao vivo, seguidos de `{tipo:"fim", resultado}` ou `{tipo:"erro"}`. O front lê o stream e mostra progresso + resumo. `public/` é resolvido via `process.cwd()`, então rode pela raiz do projeto (os scripts npm já fazem isso). Ao subir, abre o navegador automaticamente (desligável com `ABRIR_NAVEGADOR=false`).
-  - `iniciar.bat` (Windows): atalho de duplo-clique para usuários não-técnicos — checa Node e `.env`, roda `npm install` na 1ª vez e chama `npm run web`. O `.gitattributes` força CRLF nos `.bat`.
+  - `iniciar.bat` (Windows): atalho de duplo-clique para usuários não-técnicos — checa Node e `.env`, roda `npm install` e `npm run build` só na 1ª vez (`if not exist "dist\server.js"`) e depois chama `npm run web:serve` (compilado, boot rápido). Atualizou o código? Apague `dist/` para recompilar. O `.gitattributes` força CRLF nos `.bat`.
 
 Detalhes que só se entende lendo o código:
 
