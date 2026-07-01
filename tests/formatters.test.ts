@@ -1,6 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { descricaoDoCartao } from "../src/domain/formatters";
+import { descricaoDoCartao, tituloDoCartao } from "../src/domain/formatters";
+
+test("título junta nome e seguradora", () => {
+  assert.equal(
+    tituloDoCartao({ nome: "FELIPE RODRIGUES", seguradora: "PORTO SEGURO", detalhes: {} }),
+    "FELIPE RODRIGUES - PORTO SEGURO",
+  );
+});
+
+test("título é só o nome quando não há seguradora", () => {
+  assert.equal(
+    tituloDoCartao({ nome: "FELIPE RODRIGUES", detalhes: {} }),
+    "FELIPE RODRIGUES",
+  );
+});
 
 test("formata os detalhes como markdown", () => {
   const desc = descricaoDoCartao({

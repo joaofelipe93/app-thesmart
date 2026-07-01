@@ -67,10 +67,12 @@ para o quadro/lista serem nomeados automaticamente (`SETEMBRO - PROCESSO DE VEND
 
 | Variável          | Descrição                                         |
 | ----------------- | ------------------------------------------------- |
-| `OPENAI_API_KEY`  | Chave da OpenAI.                                   |
-| `OPENAI_MODEL`    | Modelo (opcional, padrão `gpt-4o`).               |
-| `TRELLO_API_KEY`  | API key do Trello.                                |
-| `TRELLO_TOKEN`    | Token do Trello.                                  |
+| `OPENAI_API_KEY`   | Chave da OpenAI.                                                     |
+| `OPENAI_MODEL`     | Modelo (opcional, padrão `gpt-4o`).                                  |
+| `TRELLO_API_KEY`   | API key do Trello.                                                  |
+| `TRELLO_TOKEN`     | Token do Trello.                                                    |
+| `TRELLO_WORKSPACE` | Área de trabalho onde o quadro é criado (opcional; vazio = pessoal). |
+| `PORT`             | Porta da interface web (opcional, padrão `3000`).                   |
 
 ## Estrutura
 

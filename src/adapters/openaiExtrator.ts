@@ -6,11 +6,12 @@ const SYSTEM_PROMPT = `Você é um assistente que lê relatórios de renovação
 Regras:
 - Identifique TODOS os clientes presentes no relatório.
 - Para cada cliente, "nome" é o nome da pessoa ou empresa.
+- "seguradora" é o nome da seguradora do cliente (ex.: Porto Seguro, Bradesco Seguros, SulAmérica). Se não houver, omita o campo.
 - "vencimento" é a DATA DE VENCIMENTO do cliente, que aparece LOGO ACIMA do nome dele no relatório, no formato dd/mm/aaaa. Use exatamente essa data. Se não houver, omita o campo.
-- Em "detalhes", coloque os outros campos relevantes que aparecerem (ex.: apólice, seguradora, ramo, valor/prêmio, contato, telefone, e-mail, observações). Não repita o vencimento aqui. Use as chaves que fizerem sentido para o documento.
+- Em "detalhes", coloque os outros campos relevantes que aparecerem (ex.: apólice, ramo, valor/prêmio, contato, telefone, e-mail, observações). Não repita aqui o vencimento nem a seguradora. Use as chaves que fizerem sentido para o documento.
 - Não invente informações. Se um campo não existir, simplesmente não o inclua.
 - Responda SOMENTE com JSON válido no formato:
-  { "clientes": [ { "nome": "string", "vencimento": "dd/mm/aaaa", "detalhes": { "campo": "valor" } } ] }`;
+  { "clientes": [ { "nome": "string", "seguradora": "string", "vencimento": "dd/mm/aaaa", "detalhes": { "campo": "valor" } } ] }`;
 
 export interface OpcoesOpenAiExtrator {
   apiKey: string;

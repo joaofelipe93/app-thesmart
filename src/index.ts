@@ -24,6 +24,7 @@ async function main(): Promise<void> {
     destino: new TrelloDestino({
       apiKey: config.trelloApiKey,
       token: config.trelloToken,
+      workspace: config.trelloWorkspace,
     }),
     log: (mensagem) => console.log(mensagem),
   });

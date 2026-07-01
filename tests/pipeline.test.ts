@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { processarRelatorio } from "../src/app/pipeline";
 import { ETAPAS_RENOVACAO } from "../src/domain/etapas";
+import { LISTAS_FLUXO } from "../src/domain/listas";
 import type {
   Cliente,
   DestinoCartoes,
@@ -78,7 +79,12 @@ test("deriva os nomes do arquivo e cria um cartão por cliente", async () => {
     {
       leitor: new LeitorFake("texto qualquer"),
       extrator: new ExtratorFake([
-        { nome: "Cliente A", vencimento: "01/08/2026", detalhes: { "Apólice": "123" } },
+        {
+          nome: "Cliente A",
+          seguradora: "Porto Seguro",
+          vencimento: "01/08/2026",
+          detalhes: { "Apólice": "123" },
+        },
         { nome: "Cliente B", detalhes: {} },
       ]),
       destino,
@@ -88,28 +94,31 @@ test("deriva os nomes do arquivo e cria um cartão por cliente", async () => {
   assert.equal(resultado.quadro, "AGOSTO - PROCESSO DE VENDA");
   assert.equal(resultado.lista, "RENOVAÇÕES - AGOSTO");
   assert.deepEqual(destino.quadros, ["AGOSTO - PROCESSO DE VENDA"]);
-  assert.deepEqual(destino.listas, ["RENOVAÇÕES - AGOSTO"]);
+  // A lista de renovações vem primeiro, seguida das listas do fluxo.
+  assert.deepEqual(destino.listas, ["RENOVAÇÕES - AGOSTO", ...LISTAS_FLUXO]);
   assert.equal(destino.cartoes.length, 2);
-  assert.equal(destino.cartoes[0].nome, "Cliente A");
+  // Título = "NOME - SEGURADORA" (ou só o nome quando não há seguradora).
+  assert.equal(destino.cartoes[0].nome, "Cliente A - Porto Seguro");
+  assert.equal(destino.cartoes[1].nome, "Cliente B");
   assert.match(destino.cartoes[0].descricao, /Apólice/);
   assert.equal(resultado.cartoes.length, 2);
 
   // Cada cartão recebe o checklist com as 5 etapas, na ordem.
   assert.equal(destino.checklists.length, 2);
   assert.deepEqual(destino.checklists[0].itens, ETAPAS_RENOVACAO);
-  assert.equal(destino.checklists[0].cartao, "Cliente A");
+  assert.equal(destino.checklists[0].cartao, "Cliente A - Porto Seguro");
   assert.deepEqual(destino.checklists[0].itens, [
     "FAZER COTAÇÃO",
     "FALAR COM O CLIENTE",
-    "TRANSMITIR PROPOSTAS",
-    "ACOMPANHAR TRANSMISSÃO DE PROPOSTAS",
+    "TRANSMITIR PROPOSTA",
+    "ACOMPANHAR TRANSMISSÃO DE PROPOSTA",
     "BAIXAR APÓLICE",
   ]);
 
   // Só quem tem vencimento recebe etiqueta "VENCIMENTO {data}".
   assert.equal(destino.etiquetas.length, 1);
   assert.deepEqual(destino.etiquetas[0], {
-    cartao: "Cliente A",
+    cartao: "Cliente A - Porto Seguro",
     texto: "VENCIMENTO 01/08/2026",
   });
 
@@ -119,12 +128,18 @@ test("deriva os nomes do arquivo e cria um cartão por cliente", async () => {
 
 test("não recria cartões de clientes que já existem na lista", async () => {
   const destino = new DestinoFake();
-  destino.existentesIniciais.add("Cliente A");
+  // O cartão existente tem o título composto (nome - seguradora).
+  destino.existentesIniciais.add("Cliente A - Porto Seguro");
 
   const resultado = await processarRelatorio("x_Agosto.pdf", {
     leitor: new LeitorFake("t"),
     extrator: new ExtratorFake([
-      { nome: "Cliente A", vencimento: "01/08/2026", detalhes: {} },
+      {
+        nome: "Cliente A",
+        seguradora: "Porto Seguro",
+        vencimento: "01/08/2026",
+        detalhes: {},
+      },
       { nome: "Cliente B", detalhes: {} },
     ]),
     destino,

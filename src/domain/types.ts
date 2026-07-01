@@ -2,11 +2,13 @@
 // Os adaptadores concretos (PDF, OpenAI, Trello) implementam essas interfaces.
 
 export interface Cliente {
-  /** Nome do cliente — vira o título do cartão. */
+  /** Nome do cliente. */
   nome: string;
+  /** Seguradora — compõe o título do cartão: "NOME - SEGURADORA". */
+  seguradora?: string;
   /** Data de vencimento (dd/mm/aaaa) — vira a etiqueta "VENCIMENTO {data}". */
   vencimento?: string;
-  /** Demais informações do cliente (apólice, seguradora, valor, etc.). */
+  /** Demais informações do cliente (apólice, valor, etc.). */
   detalhes: Record<string, string>;
 }
 

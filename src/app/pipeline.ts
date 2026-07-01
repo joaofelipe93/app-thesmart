@@ -1,6 +1,7 @@
 import { mesDoArquivo, nomeQuadro, nomeLista } from "../naming";
-import { descricaoDoCartao } from "../domain/formatters";
+import { descricaoDoCartao, tituloDoCartao } from "../domain/formatters";
 import { ETAPAS_RENOVACAO, NOME_CHECKLIST } from "../domain/etapas";
+import { LISTAS_FLUXO } from "../domain/listas";
 import type {
   CartaoRef,
   DestinoCartoes,
@@ -56,21 +57,28 @@ export async function processarRelatorio(
   log(`Preparando a lista "${tituloLista}"...`);
   const lista = await deps.destino.garantirLista(quadro, tituloLista);
 
+  // Garante as demais listas do fluxo (Kanban) no quadro.
+  for (const nomeLista of LISTAS_FLUXO) {
+    await deps.destino.garantirLista(quadro, nomeLista);
+  }
+  log(`${LISTAS_FLUXO.length} listas do fluxo prontas.`);
+
   // Idempotência: nomes já presentes na lista não são recriados.
   const existentes = await deps.destino.cartoesExistentes(lista);
 
   const cartoes: CartaoRef[] = [];
   let pulados = 0;
   for (const cliente of clientes) {
-    if (existentes.has(cliente.nome)) {
+    const titulo = tituloDoCartao(cliente);
+    if (existentes.has(titulo)) {
       pulados++;
-      log(`  • Pulado (já existe): ${cliente.nome}`);
+      log(`  • Pulado (já existe): ${titulo}`);
       continue;
     }
 
     const cartao = await deps.destino.criarCartao(
       lista,
-      cliente.nome,
+      titulo,
       descricaoDoCartao(cliente),
     );
     await deps.destino.adicionarChecklist(
@@ -85,9 +93,9 @@ export async function processarRelatorio(
         `VENCIMENTO ${cliente.vencimento}`,
       );
     }
-    existentes.add(cliente.nome);
+    existentes.add(titulo);
     const venc = cliente.vencimento ? ` (venc. ${cliente.vencimento})` : "";
-    log(`  ✓ ${cliente.nome}${venc} — ${cartao.url}`);
+    log(`  ✓ ${titulo}${venc} — ${cartao.url}`);
     cartoes.push(cartao);
   }
 

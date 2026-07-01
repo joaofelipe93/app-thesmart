@@ -21,7 +21,7 @@ npm run web:serve                                   # node dist/server.js (GUI, 
 
 Não há linter. Testes ficam em `tests/` (fora de `src/`), usam `node:test` + `node:assert/strict` e rodam via `node --import tsx`; importam o código de produção via `../src/...`. O `tsconfig.json` base inclui `src` + `tests` (é o que o `typecheck` usa); o `tsconfig.build.json` define `rootDir: src`/`outDir: dist` e inclui só `src`, para o build gerar apenas o código de produção em `dist/`.
 
-Requer **Node 18+** (usa `fetch` nativo) e um `.env` (veja `.env.example`): `OPENAI_API_KEY`, `OPENAI_MODEL` (opcional, padrão `gpt-4o`), `TRELLO_API_KEY`, `TRELLO_TOKEN`. O `config.ts` lança erro no import se qualquer variável obrigatória faltar — qualquer script que importe módulos que dependem de `config` precisa do `.env` preenchido.
+Requer **Node 18+** (usa `fetch` nativo) e um `.env` (veja `.env.example`): `OPENAI_API_KEY`, `OPENAI_MODEL` (opcional, padrão `gpt-4o`), `TRELLO_API_KEY`, `TRELLO_TOKEN`, `TRELLO_WORKSPACE` (opcional — nome da área de trabalho onde o quadro é criado; vazio = quadros pessoais). O `config.ts` lança erro no import se qualquer variável **obrigatória** faltar — qualquer script que importe módulos que dependem de `config` precisa do `.env` preenchido.
 
 ## Arquitetura
 
@@ -40,7 +40,7 @@ Detalhes que só se entende lendo o código:
 2. **`pdf-parse` é importado pelo subcaminho** `pdf-parse/lib/pdf-parse.js` de propósito (evita o debug do `index` do pacote); por isso existe `src/types/pdf-parse-lib.d.ts`. PDF sem texto (imagem) lança erro — não há OCR.
 3. **Extração com schema flexível**: `chat.completions`, `response_format: json_object`, `temperature: 0`. Cada `Cliente` é `nome` (título do cartão) + `vencimento` opcional (a data que aparece **logo acima do nome** no relatório, dd/mm/aaaa → vira a etiqueta) + `detalhes` (mapa livre → descrição markdown). Os campos de `detalhes` são desconhecidos de propósito; se o relatório for padronizado, vale travar o schema.
 4. **Trello** (`adapters/trelloDestino.ts`): REST via `fetch`, `key`+`token` na query; a API responde `name`/`url`, mapeados para `nome`/`url` do domínio. Pontos a saber:
-   - **Quadro e lista são find-or-create por nome.**
+   - **Quadro e lista são find-or-create por nome.** Se `TRELLO_WORKSPACE` estiver definido, o `idArea()` resolve o id da área de trabalho (organization) por `displayName`/`name` (cacheado, lança se não achar), o quadro é criado com `idOrganization` e o reaproveitamento filtra por essa área.
    - **Idempotência**: `cartoesExistentes` lê os nomes da lista; o pipeline pula clientes já presentes (match por nome exato do título). Não atualiza cartões existentes — só cria os que faltam.
    - **Checklist e etiqueta** são adicionados a cada cartão novo. Etiquetas são reaproveitadas por texto (cache `nome→id` por quadro, carregado uma vez), então clientes com a mesma data compartilham a etiqueta.
    - **Retry**: `chamar()` repete em `429`/`503` com backoff (respeita `Retry-After`), porque um relatório grande dispara muitas chamadas (≈ 8 por cliente: cartão + checklist + 5 itens + etiqueta).

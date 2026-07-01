@@ -41,12 +41,34 @@ const upload = multer({
 const app = express();
 app.use(express.static(path.resolve(process.cwd(), "public")));
 
+// Lista as áreas de trabalho do Trello para o usuário escolher na GUI.
+app.get("/areas", async (_req, res) => {
+  try {
+    const destino = new TrelloDestino({
+      apiKey: config.trelloApiKey,
+      token: config.trelloToken,
+    });
+    const areas = await destino.listarAreas();
+    res.json({ areas, padrao: config.trelloWorkspace });
+  } catch (erro) {
+    res.status(500).json({
+      erro: erro instanceof Error ? erro.message : String(erro),
+    });
+  }
+});
+
 app.post("/processar", upload.single("relatorio"), async (req, res) => {
   const arquivo = req.file;
   if (!arquivo) {
     res.status(400).json({ erro: "Nenhum arquivo enviado." });
     return;
   }
+
+  // Área escolhida na GUI; se não vier, usa o padrão do .env.
+  const areaEscolhida =
+    typeof req.body?.area === "string" && req.body.area.trim() !== ""
+      ? req.body.area.trim()
+      : config.trelloWorkspace;
 
   // Resposta em NDJSON (uma linha JSON por evento), enviada conforme acontece.
   res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
@@ -64,6 +86,7 @@ app.post("/processar", upload.single("relatorio"), async (req, res) => {
       destino: new TrelloDestino({
         apiKey: config.trelloApiKey,
         token: config.trelloToken,
+        workspace: areaEscolhida,
       }),
       log: (msg) => enviar({ tipo: "log", msg }),
     });

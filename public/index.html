@@ -44,6 +44,17 @@
       .drop strong { color: var(--azul-escuro); }
       .drop small { color: #5e6c84; }
       #nomeArquivo { margin-top: 12px; font-weight: 600; color: var(--azul-escuro); }
+      .campo { margin-bottom: 16px; }
+      .campo label { display: block; font-size: 13px; font-weight: 600; color: #5e6c84; margin-bottom: 6px; }
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--borda);
+        border-radius: 6px;
+        font-size: 15px;
+        background: #fff;
+        color: var(--texto);
+      }
       button {
         margin-top: 20px;
         width: 100%;
@@ -92,6 +103,13 @@
       <p class="sub">Suba o relatório de renovação em PDF. A aplicação cria os cartões no Trello automaticamente.</p>
 
       <div class="card">
+        <div class="campo">
+          <label for="area">Área de trabalho (Trello)</label>
+          <select id="area">
+            <option value="">Carregando áreas...</option>
+          </select>
+        </div>
+
         <label class="drop" id="drop">
           <input type="file" id="arquivo" accept="application/pdf,.pdf" hidden />
           <div><strong>Clique para escolher</strong> ou arraste o PDF aqui</div>
@@ -115,8 +133,34 @@
       const botao = document.getElementById("processar");
       const log = document.getElementById("log");
       const resumo = document.getElementById("resumo");
+      const areaSelect = document.getElementById("area");
 
       let arquivoSelecionado = null;
+
+      // Carrega as áreas de trabalho do Trello e pré-seleciona a padrão.
+      async function carregarAreas() {
+        try {
+          const resp = await fetch("/areas");
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.erro || "Falha ao listar áreas.");
+          areaSelect.innerHTML = "";
+          const pessoal = document.createElement("option");
+          pessoal.value = "";
+          pessoal.textContent = "Quadros pessoais";
+          areaSelect.appendChild(pessoal);
+          for (const a of data.areas) {
+            const op = document.createElement("option");
+            op.value = a.nome;
+            op.textContent = a.nome;
+            if (a.nome === data.padrao) op.selected = true;
+            areaSelect.appendChild(op);
+          }
+        } catch (e) {
+          areaSelect.innerHTML =
+            '<option value="">Não foi possível carregar as áreas — usa o padrão</option>';
+        }
+      }
+      carregarAreas();
 
       function selecionar(file) {
         if (!file) return;
@@ -167,6 +211,7 @@
         resumo.className = "";
 
         const form = new FormData();
+        form.append("area", areaSelect.value);
         form.append("relatorio", arquivoSelecionado);
 
         try {

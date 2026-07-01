@@ -15,4 +15,7 @@ export const config = {
   openaiModel: (process.env.OPENAI_MODEL || "gpt-4o").trim(),
   trelloApiKey: required("TRELLO_API_KEY"),
   trelloToken: required("TRELLO_TOKEN"),
+  // Área de trabalho (workspace/organization) onde o quadro é criado.
+  // Vazio = quadros pessoais.
+  trelloWorkspace: (process.env.TRELLO_WORKSPACE || "").trim(),
 };

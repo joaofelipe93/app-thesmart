@@ -45,8 +45,13 @@ A aplicação precisa de 3 chaves para funcionar. Elas ficam num arquivo chamado
    OPENAI_MODEL=gpt-4o
    TRELLO_API_KEY=...
    TRELLO_TOKEN=...
+   TRELLO_WORKSPACE=THE SMART - 2026
    PORT=3000
    ```
+
+   > `TRELLO_WORKSPACE` é o nome da **área de trabalho** do Trello onde o quadro
+   > será criado (exatamente como aparece no Trello). Deixe vazio para criar nos
+   > quadros pessoais.
 
 ### Onde conseguir cada chave
 

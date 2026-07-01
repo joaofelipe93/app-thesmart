@@ -7,10 +7,19 @@ import type {
 
 const BASE_URL = "https://api.trello.com/1";
 
+// Cor das etiquetas de vencimento (paleta do Trello: "sky" = azul claro).
+const COR_ETIQUETA = "sky";
+
 // Formato bruto devolvido pela API do Trello (usa "name"/"url", não "nome").
 interface TrelloBoard {
   id: string;
   name: string;
+  idOrganization?: string | null;
+}
+interface TrelloOrg {
+  id: string;
+  name: string;
+  displayName: string;
 }
 interface TrelloList {
   id: string;
@@ -29,6 +38,8 @@ interface TrelloLabel {
 export interface OpcoesTrelloDestino {
   apiKey: string;
   token: string;
+  /** Nome da área de trabalho (workspace). Vazio = quadros pessoais. */
+  workspace?: string;
 }
 
 /** Publica quadro, lista e cartões no Trello via API REST. */
@@ -37,6 +48,43 @@ export class TrelloDestino implements DestinoCartoes {
 
   // Cache de etiquetas por quadro (nome -> id) para não recriar/recarregar.
   private etiquetasPorQuadro = new Map<string, Map<string, string>>();
+  // Cache do id da área de trabalho (resolvido uma vez pelo nome).
+  private idAreaResolvido?: string;
+
+  /** Lista as áreas de trabalho (workspaces) do usuário — usado pela GUI. */
+  async listarAreas(): Promise<{ id: string; nome: string }[]> {
+    const orgs = await this.chamar<TrelloOrg[]>(
+      "GET",
+      "/members/me/organizations",
+      { fields: "name,displayName" },
+    );
+    return orgs.map((o) => ({ id: o.id, nome: o.displayName }));
+  }
+
+  /** Resolve o id da área de trabalho pelo nome; undefined se não houver workspace configurada. */
+  private async idArea(): Promise<string | undefined> {
+    const nome = this.opcoes.workspace?.trim();
+    if (!nome) return undefined;
+    if (this.idAreaResolvido) return this.idAreaResolvido;
+
+    const orgs = await this.chamar<TrelloOrg[]>(
+      "GET",
+      "/members/me/organizations",
+      { fields: "name,displayName" },
+    );
+    const area = orgs.find(
+      (o) => o.displayName === nome || o.name === nome,
+    );
+    if (!area) {
+      const disponiveis =
+        orgs.map((o) => `"${o.displayName}"`).join(", ") || "(nenhuma)";
+      throw new Error(
+        `Área de trabalho "${nome}" não encontrada no Trello. Disponíveis: ${disponiveis}.`,
+      );
+    }
+    this.idAreaResolvido = area.id;
+    return area.id;
+  }
 
   /** Chamada à API do Trello já incluindo key+token e tratando erros. */
   private async chamar<T>(
@@ -77,20 +125,27 @@ export class TrelloDestino implements DestinoCartoes {
     }
   }
 
-  /** Cria o quadro, ou reaproveita um existente de mesmo nome. */
+  /** Cria o quadro na área de trabalho configurada, ou reaproveita um existente de mesmo nome nela. */
   async garantirQuadro(nome: string): Promise<QuadroRef> {
+    const idArea = await this.idArea();
+
     const quadros = await this.chamar<TrelloBoard[]>(
       "GET",
       "/members/me/boards",
-      { fields: "name" },
+      { fields: "name,idOrganization" },
     );
-    const existente = quadros.find((q) => q.name === nome);
+    const existente = quadros.find(
+      (q) => q.name === nome && (!idArea || q.idOrganization === idArea),
+    );
     if (existente) return { id: existente.id, nome: existente.name };
 
-    const criado = await this.chamar<TrelloBoard>("POST", "/boards", {
+    const params: Record<string, string> = {
       name: nome,
       defaultLists: "false",
-    });
+    };
+    if (idArea) params.idOrganization = idArea;
+
+    const criado = await this.chamar<TrelloBoard>("POST", "/boards", params);
     return { id: criado.id, nome: criado.name };
   }
 
@@ -104,9 +159,12 @@ export class TrelloDestino implements DestinoCartoes {
     const existente = listas.find((l) => l.name === nome);
     if (existente) return { id: existente.id, nome: existente.name };
 
+    // pos "bottom" = adiciona à direita, então a ordem de criação é preservada
+    // (RENOVAÇÕES é criada primeiro, então fica sempre em primeiro).
     const criada = await this.chamar<TrelloList>("POST", "/lists", {
       name: nome,
       idBoard: quadro.id,
+      pos: "bottom",
     });
     return { id: criada.id, nome: criada.name };
   }
@@ -167,7 +225,7 @@ export class TrelloDestino implements DestinoCartoes {
       const criada = await this.chamar<TrelloLabel>("POST", "/labels", {
         idBoard: quadro.id,
         name: texto,
-        color: "orange",
+        color: COR_ETIQUETA,
       });
       idEtiqueta = criada.id;
       etiquetas.set(texto, idEtiqueta);
