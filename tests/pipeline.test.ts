@@ -122,8 +122,27 @@ test("deriva os nomes do arquivo e cria um cartão por cliente", async () => {
     texto: "VENCIMENTO 01/08/2026",
   });
 
-  // Nada foi pulado (lista vazia no início).
+  // Nada foi pulado nem ignorado (lista vazia, sem cancelados).
   assert.equal(resultado.pulados, 0);
+  assert.equal(resultado.ignorados, 0);
+});
+
+test("ignora clientes cancelados (situação C)", async () => {
+  const destino = new DestinoFake();
+
+  const resultado = await processarRelatorio("x_Agosto.pdf", {
+    leitor: new LeitorFake("t"),
+    extrator: new ExtratorFake([
+      { nome: "Ativo", situacao: "A", detalhes: {} },
+      { nome: "Cancelado", situacao: "C", detalhes: {} },
+    ]),
+    destino,
+  });
+
+  assert.equal(resultado.ignorados, 1);
+  assert.equal(resultado.cartoes.length, 1);
+  assert.equal(destino.cartoes.length, 1);
+  assert.equal(destino.cartoes[0].nome, "Ativo");
 });
 
 test("não recria cartões de clientes que já existem na lista", async () => {

@@ -33,8 +33,12 @@ async function main(): Promise<void> {
     resultado.pulados > 0
       ? ` ${resultado.pulados} já existia(m) e foi(ram) pulado(s).`
       : "";
+  const ignorados =
+    resultado.ignorados > 0
+      ? ` ${resultado.ignorados} cancelado(s) ignorado(s).`
+      : "";
   console.log(
-    `\nConcluído! ${resultado.cartoes.length} cartão(ões) criado(s) na lista "${resultado.lista}".${pulados}`,
+    `\nConcluído! ${resultado.cartoes.length} cartão(ões) criado(s) na lista "${resultado.lista}".${pulados}${ignorados}`,
   );
 }
 

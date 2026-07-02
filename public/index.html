@@ -248,6 +248,7 @@
           const criados = r.cartoes.length;
           let txt = `Concluído! ${criados} cartão(ões) criado(s) na lista "${r.lista}".`;
           if (r.pulados > 0) txt += ` ${r.pulados} já existia(m) e foi(ram) pulado(s).`;
+          if (r.ignorados > 0) txt += ` ${r.ignorados} cancelado(s) ignorado(s).`;
           mostrarResumo(true, txt);
         } else if (ev.tipo === "erro") {
           addLog(ev.msg, "err");

@@ -4,6 +4,10 @@
 export interface Cliente {
   /** Nome do cliente. */
   nome: string;
+  /** Número da apólice — usado para derivar a situação de forma determinística. */
+  apolice?: string;
+  /** Situação (coluna "Sit" do relatório): "A" = ativo, "C" = cancelado. Cancelados não viram cartão. */
+  situacao?: string;
   /** Seguradora — compõe o título do cartão: "NOME - SEGURADORA". */
   seguradora?: string;
   /** Data de vencimento (dd/mm/aaaa) — vira a etiqueta "VENCIMENTO {data}". */
