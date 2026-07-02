@@ -2,6 +2,7 @@ import { mesDoArquivo, nomeQuadro, nomeLista } from "../naming";
 import { descricaoDoCartao, tituloDoCartao } from "../domain/formatters";
 import { ETAPAS_RENOVACAO, NOME_CHECKLIST } from "../domain/etapas";
 import { LISTAS_FLUXO } from "../domain/listas";
+import { clienteAtivo } from "../domain/situacao";
 import type {
   CartaoRef,
   DestinoCartoes,
@@ -25,6 +26,8 @@ export interface ResultadoProcessamento {
   cartoes: CartaoRef[];
   /** Quantos clientes foram pulados por já existirem na lista. */
   pulados: number;
+  /** Quantos clientes foram ignorados por estarem cancelados (situação "C"). */
+  ignorados: number;
 }
 
 /**
@@ -46,7 +49,13 @@ export async function processarRelatorio(
 
   log("Extraindo clientes...");
   const clientes = await deps.extrator.extrair(texto);
-  log(`${clientes.length} cliente(s) identificado(s).`);
+  const ativos = clientes.filter(clienteAtivo);
+  const ignorados = clientes.length - ativos.length;
+  log(
+    `${clientes.length} cliente(s) identificado(s)` +
+      (ignorados > 0 ? `, ${ignorados} cancelado(s) ignorado(s)` : "") +
+      ".",
+  );
 
   const tituloQuadro = nomeQuadro(mes);
   const tituloLista = nomeLista(mes);
@@ -68,7 +77,7 @@ export async function processarRelatorio(
 
   const cartoes: CartaoRef[] = [];
   let pulados = 0;
-  for (const cliente of clientes) {
+  for (const cliente of ativos) {
     const titulo = tituloDoCartao(cliente);
     if (existentes.has(titulo)) {
       pulados++;
@@ -99,5 +108,12 @@ export async function processarRelatorio(
     cartoes.push(cartao);
   }
 
-  return { mes, quadro: tituloQuadro, lista: tituloLista, cartoes, pulados };
+  return {
+    mes,
+    quadro: tituloQuadro,
+    lista: tituloLista,
+    cartoes,
+    pulados,
+    ignorados,
+  };
 }

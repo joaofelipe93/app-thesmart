@@ -27,3 +27,12 @@ test("formata os detalhes como markdown", () => {
 test("detalhes vazios geram descrição vazia", () => {
   assert.equal(descricaoDoCartao({ nome: "X", detalhes: {} }), "");
 });
+
+test("descrição inclui a apólice quando presente", () => {
+  const desc = descricaoDoCartao({
+    nome: "X",
+    apolice: "7024112",
+    detalhes: { Valor: "R$ 10" },
+  });
+  assert.equal(desc, "**Apólice:** 7024112\n**Valor:** R$ 10");
+});
