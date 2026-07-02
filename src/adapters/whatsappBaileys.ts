@@ -24,8 +24,6 @@ const loggerSilencioso: Record<string, unknown> = {
 export interface OpcoesWhatsappBaileys {
   /** Pasta onde a sessão do WhatsApp é salva (para não reescanear toda vez). */
   pastaAuth: string;
-  /** Números que recebem a notificação (só dígitos, formato internacional). */
-  destinatarios: string[];
   log?: (mensagem: string) => void;
 }
 
@@ -104,15 +102,14 @@ export class WhatsappBaileys implements Notificador {
     conectar();
   }
 
-  async notificar(mensagem: string): Promise<void> {
+  /** Envia a mensagem para um número (só dígitos, formato internacional 55DDDNUMERO). */
+  async enviar(destino: string, mensagem: string): Promise<void> {
     if (!this.conectado || !this.sock) {
       throw new Error(
         "WhatsApp não conectado — escaneie o QR na página do servidor.",
       );
     }
-    for (const numero of this.opcoes.destinatarios) {
-      const jid = `${numero.replace(/\D/g, "")}@s.whatsapp.net`;
-      await this.sock.sendMessage(jid, { text: mensagem });
-    }
+    const jid = `${destino.replace(/\D/g, "")}@s.whatsapp.net`;
+    await this.sock.sendMessage(jid, { text: mensagem });
   }
 }

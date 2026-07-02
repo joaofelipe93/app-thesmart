@@ -51,22 +51,24 @@ máquina — quem usa não precisa mexer em nada disso.
 
 A porta pode ser mudada com `PORT`; o navegador não abre sozinho se `ABRIR_NAVEGADOR=false`.
 
-### Notificação no WhatsApp quando um cartão muda de lista (opcional)
+### Mensagem no WhatsApp para o cliente quando o cartão muda de lista (opcional)
 
 Um serviço **separado** (`npm run webhook`) recebe o webhook do Trello e, quando um
-cartão é movido para uma das listas configuradas (`LISTAS_NOTIFICAR`), envia uma
-mensagem no **WhatsApp** via **Baileys** (conexão por QR code).
+cartão entra numa lista configurada (`LISTAS_NOTIFICAR`), busca o **telefone do cliente**
+na descrição do cartão e envia uma mensagem no **WhatsApp** desse cliente, via **Baileys**
+(conexão por QR code). Telefones fixos / sem o 9 são pulados.
 
 > ⚠️ Baileys é **não-oficial** (usa o WhatsApp Web): há risco de bloqueio do número —
-> use um **número dedicado**, não o pessoal. O serviço precisa ficar **hospedado e
-> ligado** (o Trello só alcança uma **URL pública HTTPS**; `localhost` não funciona).
+> use um **número dedicado**, não o pessoal. Mensagear **clientes externos** aumenta esse
+> risco. O serviço precisa ficar **hospedado e ligado** (o Trello só alcança uma
+> **URL pública HTTPS**; `localhost` não funciona).
 
 **Passos:**
 
 1. No `.env`, preencha `TRELLO_API_SECRET` (mesma página da API key), `WEBHOOK_CALLBACK_URL`
    (a URL pública completa, ex.: `https://seu-host/webhook/trello`), `LISTAS_NOTIFICAR`
-   (listas que disparam, separadas por vírgula) e `WHATSAPP_DESTINATARIOS` (números que
-   recebem, só dígitos com DDI/DDD, separados por vírgula).
+   (lista que dispara, ex.: `Enviar msg Ass 24h e Aplicativo da seguradora`) e, opcionalmente,
+   `MENSAGEM_CLIENTE` (o texto enviado, com `{nome}`; vazio usa o padrão do código).
 2. Hospede e suba o serviço: `npm run build && npm run webhook:serve`.
 3. Abra a URL pública no navegador e **escaneie o QR** com o WhatsApp do número dedicado
    (Aparelhos conectados ▸ Conectar um aparelho). A sessão fica salva em `whatsapp-auth/`.

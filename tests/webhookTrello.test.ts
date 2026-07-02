@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import {
   assinaturaValida,
-  notificacaoDeMovimentacao,
+  cartaoMovidoParaListas,
 } from "../src/domain/webhookTrello";
 
-const LISTAS = ["Apólices emitidas", "Não fechado"];
+const LISTAS = ["Enviar msg Ass 24h e Aplicativo da seguradora"];
 
 function moverCartao(listaDestino: string): unknown {
   return {
     action: {
       type: "updateCard",
       data: {
-        card: { name: "FELIPE RODRIGUES - PORTO SEGURO" },
+        card: { id: "card123", name: "FELIPE RODRIGUES - PORTO SEGURO" },
         listBefore: { name: "Aguardando cliente" },
         listAfter: { name: listaDestino },
         board: { name: "AGOSTO - PROCESSO DE VENDA" },
@@ -23,37 +23,43 @@ function moverCartao(listaDestino: string): unknown {
   };
 }
 
-test("notifica quando move para uma lista-alvo", () => {
-  const msg = notificacaoDeMovimentacao(moverCartao("Apólices emitidas"), LISTAS);
-  assert.ok(msg);
-  assert.match(msg!, /João Felipe/);
-  assert.match(msg!, /FELIPE RODRIGUES - PORTO SEGURO/);
-  assert.match(msg!, /Apólices emitidas/);
+test("retorna o cartão quando move para a lista-alvo", () => {
+  const c = cartaoMovidoParaListas(
+    moverCartao("Enviar msg Ass 24h e Aplicativo da seguradora"),
+    LISTAS,
+  );
+  assert.deepEqual(c, {
+    id: "card123",
+    nome: "FELIPE RODRIGUES - PORTO SEGURO",
+    lista: "Enviar msg Ass 24h e Aplicativo da seguradora",
+  });
 });
 
 test("ignora move para lista fora da lista-alvo", () => {
-  assert.equal(
-    notificacaoDeMovimentacao(moverCartao("Cotações feitas"), LISTAS),
-    null,
-  );
+  assert.equal(cartaoMovidoParaListas(moverCartao("Cotações feitas"), LISTAS), null);
 });
 
 test("casa lista ignorando maiúsculas/espaços", () => {
   assert.ok(
-    notificacaoDeMovimentacao(moverCartao("  apólices emitidas  "), LISTAS),
+    cartaoMovidoParaListas(
+      moverCartao("  enviar msg ass 24h e aplicativo da seguradora  "),
+      LISTAS,
+    ),
   );
 });
 
-test("ignora updateCard que não é movimentação (sem listAfter)", () => {
+test("ignora updateCard sem listAfter (não é movimentação)", () => {
   const payload = {
-    action: { type: "updateCard", data: { card: { name: "X" }, old: { name: "Y" } } },
+    action: { type: "updateCard", data: { card: { id: "x", name: "X" }, old: {} } },
   };
-  assert.equal(notificacaoDeMovimentacao(payload, LISTAS), null);
+  assert.equal(cartaoMovidoParaListas(payload, LISTAS), null);
 });
 
 test("ignora ações que não são updateCard", () => {
-  const payload = { action: { type: "commentCard", data: {} } };
-  assert.equal(notificacaoDeMovimentacao(payload, LISTAS), null);
+  assert.equal(
+    cartaoMovidoParaListas({ action: { type: "commentCard", data: {} } }, LISTAS),
+    null,
+  );
 });
 
 test("assinatura válida passa; inválida falha", () => {

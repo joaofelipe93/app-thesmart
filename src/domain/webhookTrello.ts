@@ -21,14 +21,21 @@ export function assinaturaValida(
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+export interface CartaoMovido {
+  id: string;
+  nome: string;
+  lista: string;
+}
+
 /**
  * Interpreta um payload de webhook do Trello. Se for um cartão MOVIDO para uma
- * das listas-alvo, devolve a mensagem de notificação; caso contrário, `null`.
+ * das listas-alvo, devolve os dados do cartão (id + nome + lista); senão `null`.
+ * O telefone/descrição não vêm no webhook — o id é usado para buscar o cartão.
  */
-export function notificacaoDeMovimentacao(
+export function cartaoMovidoParaListas(
   payload: unknown,
   listasAlvo: readonly string[],
-): string | null {
+): CartaoMovido | null {
   const action = (payload as { action?: Record<string, unknown> })?.action;
   if (!action || action.type !== "updateCard") return null;
 
@@ -41,13 +48,12 @@ export function notificacaoDeMovimentacao(
   const casa = listasAlvo.some((l) => l.trim().toLowerCase() === destino);
   if (!casa) return null;
 
-  const cartao = (data?.card as { name?: string })?.name ?? "(cartão)";
-  const quem =
-    (action.memberCreator as { fullName?: string })?.fullName ?? "Alguém";
-  const quadro = (data?.board as { name?: string })?.name;
+  const card = data?.card as { id?: string; name?: string } | undefined;
+  if (!card?.id) return null;
 
-  return (
-    `🔔 ${quem} moveu o cartão "${cartao}" para "${listAfter.name}"` +
-    (quadro ? ` (quadro: ${quadro}).` : ".")
-  );
+  return {
+    id: card.id,
+    nome: card.name ?? "",
+    lista: listAfter.name,
+  };
 }

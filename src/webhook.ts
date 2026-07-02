@@ -4,10 +4,17 @@ import qrcode from "qrcode";
 
 import { config } from "./config";
 import { WhatsappBaileys } from "./adapters/whatsappBaileys";
+import { TrelloDestino } from "./adapters/trelloDestino";
 import {
   assinaturaValida,
-  notificacaoDeMovimentacao,
+  cartaoMovidoParaListas,
 } from "./domain/webhookTrello";
+import { extrairTelefone, normalizarTelefoneBR } from "./domain/telefone";
+import {
+  MENSAGEM_PADRAO_CLIENTE,
+  montarMensagem,
+  nomeDoTitulo,
+} from "./domain/mensagens";
 
 function exigir(nome: string, valor: string): void {
   if (!valor) {
@@ -17,21 +24,46 @@ function exigir(nome: string, valor: string): void {
 }
 exigir("TRELLO_API_SECRET", config.trelloApiSecret);
 exigir("WEBHOOK_CALLBACK_URL", config.webhookCallbackURL);
-if (config.whatsappDestinatarios.length === 0) {
-  console.error("[config] Falta WHATSAPP_DESTINATARIOS no .env.");
-  process.exit(1);
-}
 if (config.listasNotificar.length === 0) {
   console.warn(
-    "[config] LISTAS_NOTIFICAR está vazio — nenhuma movimentação vai notificar.",
+    "[config] LISTAS_NOTIFICAR está vazio — nenhuma movimentação vai disparar mensagem.",
   );
 }
 
+const templateMensagem = config.mensagemCliente || MENSAGEM_PADRAO_CLIENTE;
+
 const whatsapp = new WhatsappBaileys({
   pastaAuth: path.resolve(process.cwd(), "whatsapp-auth"),
-  destinatarios: config.whatsappDestinatarios,
   log: (m) => console.log("[whatsapp]", m),
 });
+
+const trello = new TrelloDestino({
+  apiKey: config.trelloApiKey,
+  token: config.trelloToken,
+});
+
+/** Busca o cartão, extrai o telefone do cliente e envia a mensagem padrão. */
+async function enviarAoCliente(cartaoId: string, nomeCartao: string): Promise<void> {
+  const cartao = await trello.obterCartao(cartaoId);
+
+  const telefoneBruto = extrairTelefone(cartao.descricao);
+  if (!telefoneBruto) {
+    console.warn(`[whatsapp] cartão "${cartao.nome}" sem telefone na descrição — pulado.`);
+    return;
+  }
+  const numero = normalizarTelefoneBR(telefoneBruto);
+  if (!numero) {
+    console.warn(
+      `[whatsapp] telefone "${telefoneBruto}" de "${cartao.nome}" não é celular válido — pulado.`,
+    );
+    return;
+  }
+
+  const nome = nomeDoTitulo(nomeCartao || cartao.nome);
+  const mensagem = montarMensagem(templateMensagem, nome);
+  await whatsapp.enviar(numero, mensagem);
+  console.log(`[whatsapp] enviado para ${nome} (${numero}).`);
+}
 
 const app = express();
 
@@ -67,14 +99,11 @@ app.post("/webhook/trello", (req, res) => {
     return;
   }
 
-  const mensagem = notificacaoDeMovimentacao(payload, config.listasNotificar);
-  if (mensagem) {
-    whatsapp
-      .notificar(mensagem)
-      .then(() => console.log("[whatsapp] notificado:", mensagem))
-      .catch((e) =>
-        console.error("[whatsapp] falha ao notificar:", (e as Error).message),
-      );
+  const cartao = cartaoMovidoParaListas(payload, config.listasNotificar);
+  if (cartao) {
+    enviarAoCliente(cartao.id, cartao.nome).catch((e) =>
+      console.error("[whatsapp] falha ao enviar:", (e as Error).message),
+    );
   }
 });
 
@@ -82,7 +111,7 @@ app.post("/webhook/trello", (req, res) => {
 app.get("/", async (_req, res) => {
   if (whatsapp.pronto) {
     res.send(
-      "<h2>WhatsApp conectado ✅</h2><p>O servidor está pronto para notificar.</p>",
+      "<h2>WhatsApp conectado ✅</h2><p>O servidor está pronto para enviar.</p>",
     );
     return;
   }

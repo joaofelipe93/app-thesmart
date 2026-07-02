@@ -133,7 +133,7 @@ cat <<FIM
     Importante:
       WEBHOOK_CALLBACK_URL = https://SEU_DOMINIO/webhook/trello
       TRELLO_API_SECRET, TRELLO_API_KEY, TRELLO_TOKEN, OPENAI_API_KEY
-      LISTAS_NOTIFICAR, WHATSAPP_DESTINATARIOS
+      LISTAS_NOTIFICAR (a lista-alvo), MENSAGEM_CLIENTE (opcional)
 
  2) Reinicie o serviço:
       systemctl restart thesmart-webhook
