@@ -18,4 +18,20 @@ export const config = {
   // Área de trabalho (workspace/organization) onde o quadro é criado.
   // Vazio = quadros pessoais.
   trelloWorkspace: (process.env.TRELLO_WORKSPACE || "").trim(),
+
+  // --- Usados apenas pelo servidor de webhook (opcionais para CLI/GUI) ---
+  // Secret da API do Trello (trello.com/app-key) — valida a assinatura do webhook.
+  trelloApiSecret: (process.env.TRELLO_API_SECRET || "").trim(),
+  // URL pública COMPLETA do endpoint do webhook (ex.: https://seu-host/webhook/trello).
+  webhookCallbackURL: (process.env.WEBHOOK_CALLBACK_URL || "").trim(),
+  // Lista(s) que disparam a notificação (separadas por vírgula).
+  listasNotificar: (process.env.LISTAS_NOTIFICAR || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+  // Números de WhatsApp que recebem a notificação (só dígitos, formato internacional).
+  whatsappDestinatarios: (process.env.WHATSAPP_DESTINATARIOS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
 };

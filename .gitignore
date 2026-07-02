@@ -3,5 +3,8 @@ dist/
 .env
 *.log
 
+# Sessão do WhatsApp (Baileys) — credenciais da conexão, nunca versionar
+whatsapp-auth/
+
 # Relatórios reais contêm dados de clientes (PII) — nunca versionar
 *.pdf

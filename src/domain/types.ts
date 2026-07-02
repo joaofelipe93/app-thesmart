@@ -42,6 +42,11 @@ export interface ExtratorClientes {
   extrair(textoRelatorio: string): Promise<Cliente[]>;
 }
 
+/** Porta de notificação: envia uma mensagem por algum canal (WhatsApp, etc.). */
+export interface Notificador {
+  notificar(mensagem: string): Promise<void>;
+}
+
 /** Porta de saída: onde os cartões são publicados (Trello, etc.). */
 export interface DestinoCartoes {
   garantirQuadro(nome: string): Promise<QuadroRef>;

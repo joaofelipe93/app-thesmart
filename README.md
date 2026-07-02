@@ -51,6 +51,31 @@ máquina — quem usa não precisa mexer em nada disso.
 
 A porta pode ser mudada com `PORT`; o navegador não abre sozinho se `ABRIR_NAVEGADOR=false`.
 
+### Notificação no WhatsApp quando um cartão muda de lista (opcional)
+
+Um serviço **separado** (`npm run webhook`) recebe o webhook do Trello e, quando um
+cartão é movido para uma das listas configuradas (`LISTAS_NOTIFICAR`), envia uma
+mensagem no **WhatsApp** via **Baileys** (conexão por QR code).
+
+> ⚠️ Baileys é **não-oficial** (usa o WhatsApp Web): há risco de bloqueio do número —
+> use um **número dedicado**, não o pessoal. O serviço precisa ficar **hospedado e
+> ligado** (o Trello só alcança uma **URL pública HTTPS**; `localhost` não funciona).
+
+**Passos:**
+
+1. No `.env`, preencha `TRELLO_API_SECRET` (mesma página da API key), `WEBHOOK_CALLBACK_URL`
+   (a URL pública completa, ex.: `https://seu-host/webhook/trello`), `LISTAS_NOTIFICAR`
+   (listas que disparam, separadas por vírgula) e `WHATSAPP_DESTINATARIOS` (números que
+   recebem, só dígitos com DDI/DDD, separados por vírgula).
+2. Hospede e suba o serviço: `npm run build && npm run webhook:serve`.
+3. Abra a URL pública no navegador e **escaneie o QR** com o WhatsApp do número dedicado
+   (Aparelhos conectados ▸ Conectar um aparelho). A sessão fica salva em `whatsapp-auth/`.
+4. Registre o webhook no Trello, apontando para o quadro:
+   `npm run webhook:registrar <idOuShortLinkDoQuadro>` (o shortLink é o código da URL do
+   quadro: `trello.com/b/<shortLink>/...`). Use `--listar` para ver os webhooks já criados.
+
+Pronto: mover um cartão para uma lista-alvo dispara a mensagem no WhatsApp.
+
 ### Linha de comando (alternativa)
 
 ```bash
