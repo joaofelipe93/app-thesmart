@@ -24,14 +24,11 @@ export const config = {
   trelloApiSecret: (process.env.TRELLO_API_SECRET || "").trim(),
   // URL pública COMPLETA do endpoint do webhook (ex.: https://seu-host/webhook/trello).
   webhookCallbackURL: (process.env.WEBHOOK_CALLBACK_URL || "").trim(),
-  // Lista(s) que disparam a notificação (separadas por vírgula).
+  // Lista(s) que disparam o envio ao cliente (separadas por vírgula).
   listasNotificar: (process.env.LISTAS_NOTIFICAR || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean),
-  // Números de WhatsApp que recebem a notificação (só dígitos, formato internacional).
-  whatsappDestinatarios: (process.env.WHATSAPP_DESTINATARIOS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  // Mensagem enviada ao cliente (opcional; usa {nome}). Vazio = usa o padrão do código.
+  mensagemCliente: (process.env.MENSAGEM_CLIENTE || "").trim(),
 };

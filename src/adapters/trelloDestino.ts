@@ -169,6 +169,16 @@ export class TrelloDestino implements DestinoCartoes {
     return { id: criada.id, nome: criada.name };
   }
 
+  /** Busca um cartão pelo id (nome + descrição) — usado pelo webhook. */
+  async obterCartao(id: string): Promise<{ nome: string; descricao: string }> {
+    const cartao = await this.chamar<{ name: string; desc: string }>(
+      "GET",
+      `/cards/${id}`,
+      { fields: "name,desc" },
+    );
+    return { nome: cartao.name, descricao: cartao.desc };
+  }
+
   /** Nomes dos cartões abertos já presentes na lista. */
   async cartoesExistentes(lista: ListaRef): Promise<Set<string>> {
     const cartoes = await this.chamar<TrelloCard[]>(
