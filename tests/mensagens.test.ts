@@ -9,6 +9,13 @@ test("substitui {nome} no template", () => {
   );
 });
 
+test("tolera variações do placeholder de nome", () => {
+  assert.equal(montarMensagem("Oi {{Nome}}", "ANA"), "Oi ANA");
+  assert.equal(montarMensagem("Oi {{nome}}", "ANA"), "Oi ANA");
+  assert.equal(montarMensagem("Oi {Nome}", "ANA"), "Oi ANA");
+  assert.equal(montarMensagem("Oi {nome} e {{Nome}}", "ANA"), "Oi ANA e ANA");
+});
+
 test("nomeDoTitulo pega o nome antes da seguradora", () => {
   assert.equal(
     nomeDoTitulo("FELIPE RODRIGUES - PORTO SEGURO"),
