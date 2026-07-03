@@ -9,7 +9,7 @@ Agradecemos pela confiança em contar com a The Smart Corretora para cuidar da p
 
 Para que você tenha tudo à mão quando precisar, reunimos abaixo os principais canais de atendimento da sua seguradora:
 
-*Seguradora:* Porto Seguro
+*Seguradora:* {seguradora}
 
 *📞 Assistência 24 horas:*
 
@@ -28,15 +28,30 @@ Sempre que precisar de qualquer orientação, nossa equipe estará à disposiç�
 Conte conosco!`;
 
 /**
- * Substitui o placeholder de nome pelo nome do cliente. Tolera variações:
- * {nome}, {{nome}}, {Nome}, {{Nome}} (sem diferenciar maiúsculas/minúsculas).
+ * Substitui placeholders no template pelos valores informados. Tolera variações:
+ * {chave}, {{chave}}, {Chave}, {{Chave}} (sem diferenciar maiúsculas/minúsculas).
+ * Ex.: montarMensagem(t, { nome: "MARIA", seguradora: "AZUL" }).
  */
-export function montarMensagem(template: string, nome: string): string {
-  return template.replace(/\{\{?\s*nome\s*\}?\}/gi, nome);
+export function montarMensagem(
+  template: string,
+  valores: Record<string, string>,
+): string {
+  let resultado = template;
+  for (const [chave, valor] of Object.entries(valores)) {
+    const re = new RegExp(`\\{\\{?\\s*${chave}\\s*\\}?\\}`, "gi");
+    resultado = resultado.replace(re, valor);
+  }
+  return resultado;
 }
 
 /** Extrai o nome do cliente do título do cartão ("NOME - SEGURADORA"). */
 export function nomeDoTitulo(tituloCartao: string): string {
   const idx = tituloCartao.lastIndexOf(" - ");
   return idx > 0 ? tituloCartao.slice(0, idx).trim() : tituloCartao.trim();
+}
+
+/** Extrai a seguradora do título do cartão ("NOME - SEGURADORA"); "" se não houver. */
+export function seguradoraDoTitulo(tituloCartao: string): string {
+  const idx = tituloCartao.lastIndexOf(" - ");
+  return idx > 0 ? tituloCartao.slice(idx + 3).trim() : "";
 }
