@@ -1,28 +1,37 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { montarMensagem, nomeDoTitulo } from "../src/domain/mensagens";
+import {
+  montarMensagem,
+  nomeDoTitulo,
+  seguradoraDoTitulo,
+} from "../src/domain/mensagens";
 
-test("substitui {nome} no template", () => {
+test("substitui {nome} e {seguradora} no template", () => {
   assert.equal(
-    montarMensagem("Olá {nome}, tudo bem?", "MARIA"),
-    "Olá MARIA, tudo bem?",
+    montarMensagem("Olá {nome}, sua seguradora é {seguradora}.", {
+      nome: "MARIA",
+      seguradora: "AZUL SEGUROS",
+    }),
+    "Olá MARIA, sua seguradora é AZUL SEGUROS.",
   );
 });
 
-test("tolera variações do placeholder de nome", () => {
-  assert.equal(montarMensagem("Oi {{Nome}}", "ANA"), "Oi ANA");
-  assert.equal(montarMensagem("Oi {{nome}}", "ANA"), "Oi ANA");
-  assert.equal(montarMensagem("Oi {Nome}", "ANA"), "Oi ANA");
-  assert.equal(montarMensagem("Oi {nome} e {{Nome}}", "ANA"), "Oi ANA e ANA");
-});
-
-test("nomeDoTitulo pega o nome antes da seguradora", () => {
+test("tolera variações dos placeholders", () => {
   assert.equal(
-    nomeDoTitulo("FELIPE RODRIGUES - PORTO SEGURO"),
-    "FELIPE RODRIGUES",
+    montarMensagem("Oi {{Nome}} — {{seguradora}}", {
+      nome: "ANA",
+      seguradora: "PORTO SEGURO",
+    }),
+    "Oi ANA — PORTO SEGURO",
   );
 });
 
-test("nomeDoTitulo sem seguradora devolve o título inteiro", () => {
+test("nomeDoTitulo e seguradoraDoTitulo separam o título", () => {
+  assert.equal(nomeDoTitulo("FELIPE RODRIGUES - PORTO SEGURO"), "FELIPE RODRIGUES");
+  assert.equal(seguradoraDoTitulo("FELIPE RODRIGUES - PORTO SEGURO"), "PORTO SEGURO");
+});
+
+test("título sem seguradora: nome inteiro e seguradora vazia", () => {
   assert.equal(nomeDoTitulo("FELIPE RODRIGUES"), "FELIPE RODRIGUES");
+  assert.equal(seguradoraDoTitulo("FELIPE RODRIGUES"), "");
 });
