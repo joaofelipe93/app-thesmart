@@ -16,6 +16,7 @@ import {
   nomeDoTitulo,
   seguradoraDoTitulo,
 } from "./domain/mensagens";
+import { contatosDaSeguradora } from "./domain/seguradoras";
 
 function exigir(nome: string, valor: string): void {
   if (!valor) {
@@ -63,7 +64,12 @@ async function enviarAoCliente(cartaoId: string, nomeCartao: string): Promise<vo
   const titulo = nomeCartao || cartao.nome;
   const nome = nomeDoTitulo(titulo);
   const seguradora = seguradoraDoTitulo(titulo);
-  const mensagem = montarMensagem(templateMensagem, { nome, seguradora });
+  const contatos = contatosDaSeguradora(seguradora);
+  const mensagem = montarMensagem(templateMensagem, {
+    nome,
+    seguradora,
+    contatos,
+  });
   await whatsapp.enviar(numero, mensagem);
   console.log(`[whatsapp] enviado para ${nome} (${numero}).`);
 }

@@ -1,8 +1,9 @@
 // Mensagem enviada ao cliente quando o cartão entra na lista-alvo.
 // Pode ser sobrescrita pela variável de ambiente MENSAGEM_CLIENTE.
 
-// Mensagem de teste (canais de atendimento Porto Seguro). Ainda não é a final —
-// para produção, cada seguradora precisaria da sua própria mensagem.
+// Mensagem ao cliente. Os contatos ({contatos}) são preenchidos conforme a
+// seguradora do cartão (ver domain/seguradoras.ts). Pode ser sobrescrita por
+// MENSAGEM_CLIENTE no .env.
 export const MENSAGEM_PADRAO_CLIENTE = `Olá, {nome}! 😊
 
 Agradecemos pela confiança em contar com a The Smart Corretora para cuidar da proteção do seu patrimônio.
@@ -11,17 +12,7 @@ Para que você tenha tudo à mão quando precisar, reunimos abaixo os principais
 
 *Seguradora:* {seguradora}
 
-*📞 Assistência 24 horas:*
-
-- (11) 3366-3110 – Grande São Paulo
-- 3004-6268 – Capitais e grandes centros
-- 0800 727 8118 – Demais localidades
-
-*📱 Aplicativo:*
-
-- iOS (iPhone): https://apps.apple.com/us/app/porto-seguros-cart%C3%A3o-e/id1511026277?pt=304855&ct=hub-vendas&mt=
-
-- Android: https://play.google.com/store/apps/details?id=br.com.portoseguro.experienciacliente.mundoporto&referrer=utm_source%3Dhub-vendas%26utm_medium%3Dcta-download%26utm_campaign%3Dhub-vendas&pli=1
+{contatos}
 
 Sempre que precisar de qualquer orientação, nossa equipe estará à disposição para ajudar.
 
