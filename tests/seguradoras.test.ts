@@ -23,8 +23,20 @@ test("todo bloco reconhecido tem assistência e app", () => {
   assert.match(b, /Android:/);
 });
 
-test("seguradora desconhecida usa o fallback", () => {
+test("Suhai tem contatos mas não tem app", () => {
   const b = contatosDaSeguradora("SUHAI SEGUROS");
+  assert.match(b, /0800 327 8424/);
+  assert.doesNotMatch(b, /Aplicativo/);
+});
+
+test("Allianz tem contatos e app", () => {
+  const b = contatosDaSeguradora("ALLIANZ SEGUROS");
+  assert.match(b, /0800 777 7243/);
+  assert.match(b, /allianz-cliente-auto/);
+});
+
+test("seguradora desconhecida usa o fallback", () => {
+  const b = contatosDaSeguradora("SULAMÉRICA SEGUROS");
   assert.match(b, /Consulte os canais de atendimento/);
   assert.doesNotMatch(b, /0800/);
 });

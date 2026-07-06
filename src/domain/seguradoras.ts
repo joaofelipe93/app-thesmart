@@ -5,8 +5,9 @@ interface InfoSeguradora {
   chaves: string[];
   /** Linhas de telefone/assistência. */
   assistencia: string[];
-  iOS: string;
-  android: string;
+  /** Links do app (omitidos quando a seguradora não tem aplicativo). */
+  iOS?: string;
+  android?: string;
 }
 
 const APP_PORTO_IOS =
@@ -118,6 +119,26 @@ const SEGURADORAS: InfoSeguradora[] = [
     android:
       "https://play.google.com/store/apps/details?id=br.com.libertyseguros.aliro&hl=pt_BR&gl=US",
   },
+  {
+    chaves: ["SUHAI"],
+    assistencia: [
+      "(11) 3003-0335 - Roubo e Furto",
+      "0800 327 8424 - Assistência 24 horas",
+    ],
+    // SUHAI não possui aplicativo.
+  },
+  {
+    chaves: ["ALLIANZ"],
+    assistencia: [
+      "4090-1110 - Capitais e regiões metropolitanas",
+      "0800 777 7243 - Outras localidades",
+      "0800 013 0700 - Assistência 24 horas e Guincho",
+      "0800 70 111 70 - Assist. Vidros, Retrovisores, Lanternas e Faróis",
+    ],
+    iOS: "https://apps.apple.com/br/app/allianz-cliente-auto/id1554862261",
+    android:
+      "https://play.google.com/store/apps/details?id=br.com.allianz.mobile.auto&hl=pt_BR&gl=US",
+  },
 ];
 
 const FALLBACK =
@@ -133,12 +154,14 @@ function normalizar(texto: string): string {
 
 function bloco(info: InfoSeguradora): string {
   const linhas = info.assistencia.map((l) => `- ${l}`).join("\n");
-  return (
-    `*📞 Assistência 24 horas:*\n${linhas}\n\n` +
-    `*📱 Aplicativo:*\n` +
-    `- iOS (iPhone): ${info.iOS}\n` +
-    `- Android: ${info.android}`
-  );
+  let texto = `*📞 Assistência 24 horas:*\n${linhas}`;
+  if (info.iOS && info.android) {
+    texto +=
+      `\n\n*📱 Aplicativo:*\n` +
+      `- iOS (iPhone): ${info.iOS}\n` +
+      `- Android: ${info.android}`;
+  }
+  return texto;
 }
 
 /**
