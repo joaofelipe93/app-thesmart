@@ -77,19 +77,44 @@ app.post("/processar", upload.single("relatorio"), async (req, res) => {
   const enviar = (evento: unknown) => res.write(JSON.stringify(evento) + "\n");
 
   try {
+    const destino = new TrelloDestino({
+      apiKey: config.trelloApiKey,
+      token: config.trelloToken,
+      workspace: areaEscolhida,
+    });
+
     const resultado = await processarRelatorio(arquivo.path, {
       leitor: new PdfLeitor(),
       extrator: new OpenAiExtrator({
         apiKey: config.openaiApiKey,
         model: config.openaiModel,
       }),
-      destino: new TrelloDestino({
-        apiKey: config.trelloApiKey,
-        token: config.trelloToken,
-        workspace: areaEscolhida,
-      }),
+      destino,
       log: (msg) => enviar({ tipo: "log", msg }),
     });
+
+    // Registra o webhook do Trello para o quadro criado (se configurado no .env).
+    if (config.webhookCallbackURL) {
+      try {
+        const status = await destino.garantirWebhook(
+          resultado.quadroRef,
+          config.webhookCallbackURL,
+        );
+        enviar({
+          tipo: "log",
+          msg:
+            status === "criado"
+              ? `Webhook do Trello registrado para "${resultado.quadro}".`
+              : `Webhook do Trello já estava registrado para "${resultado.quadro}".`,
+        });
+      } catch (e) {
+        enviar({
+          tipo: "log",
+          msg: `Aviso: não foi possível registrar o webhook: ${(e as Error).message}`,
+        });
+      }
+    }
+
     enviar({ tipo: "fim", resultado });
   } catch (erro) {
     enviar({

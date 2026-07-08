@@ -48,5 +48,6 @@ Detalhes que só se entende lendo o código:
    - **Idempotência**: `cartoesExistentes` lê os nomes da lista; o pipeline pula clientes já presentes (match por nome exato do título). Não atualiza cartões existentes — só cria os que faltam.
    - **Checklist e etiqueta** são adicionados a cada cartão novo. Etiquetas são reaproveitadas por texto (cache `nome→id` por quadro, carregado uma vez), então clientes com a mesma data compartilham a etiqueta.
    - **Retry**: `chamar()` repete em `429`/`503` com backoff (respeita `Retry-After`), porque um relatório grande dispara muitas chamadas (≈ 8 por cliente: cartão + checklist + 5 itens + etiqueta).
+   - **Auto-registro do webhook**: `garantirWebhook(quadro, callbackURL)` é find-or-create idempotente (usa o id do quadro como `idModel`). `server.ts`/`index.ts` chamam após `processarRelatorio` se `WEBHOOK_CALLBACK_URL` estiver no `.env` — assim cada quadro novo registra o webhook sozinho, sem `webhook:registrar` manual. `processarRelatorio` retorna `quadroRef` (com id) no resultado para isso.
 
 Convenções: código e mensagens ao usuário em **português**; saída em CommonJS.

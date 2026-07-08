@@ -15,19 +15,40 @@ async function main(): Promise<void> {
   }
 
   // Composition root: liga os adaptadores concretos ao núcleo.
+  const destino = new TrelloDestino({
+    apiKey: config.trelloApiKey,
+    token: config.trelloToken,
+    workspace: config.trelloWorkspace,
+  });
+
   const resultado = await processarRelatorio(caminhoArquivo, {
     leitor: new PdfLeitor(),
     extrator: new OpenAiExtrator({
       apiKey: config.openaiApiKey,
       model: config.openaiModel,
     }),
-    destino: new TrelloDestino({
-      apiKey: config.trelloApiKey,
-      token: config.trelloToken,
-      workspace: config.trelloWorkspace,
-    }),
+    destino,
     log: (mensagem) => console.log(mensagem),
   });
+
+  // Registra o webhook do Trello para o quadro criado (se configurado no .env).
+  if (config.webhookCallbackURL) {
+    try {
+      const status = await destino.garantirWebhook(
+        resultado.quadroRef,
+        config.webhookCallbackURL,
+      );
+      console.log(
+        status === "criado"
+          ? `Webhook do Trello registrado para "${resultado.quadro}".`
+          : `Webhook do Trello já estava registrado para "${resultado.quadro}".`,
+      );
+    } catch (e) {
+      console.warn(
+        `Aviso: não foi possível registrar o webhook: ${(e as Error).message}`,
+      );
+    }
+  }
 
   const pulados =
     resultado.pulados > 0
