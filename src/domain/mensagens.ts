@@ -35,14 +35,28 @@ export function montarMensagem(
   return resultado;
 }
 
-/** Extrai o nome do cliente do título do cartão ("NOME - SEGURADORA"). */
-export function nomeDoTitulo(tituloCartao: string): string {
-  const idx = tituloCartao.lastIndexOf(" - ");
-  return idx > 0 ? tituloCartao.slice(0, idx).trim() : tituloCartao.trim();
+// Marcadores que o usuário coloca em cartões manuais e que não fazem parte do
+// nome nem da seguradora (ex.: "NOME - NOVO - SEGURADORA").
+const MARCADORES = new Set(["NOVO"]);
+
+/** Remove segmentos marcadores (ex.: "NOVO") do título. */
+function tituloSemMarcadores(tituloCartao: string): string {
+  return tituloCartao
+    .split(" - ")
+    .filter((parte) => !MARCADORES.has(parte.trim().toUpperCase()))
+    .join(" - ");
 }
 
-/** Extrai a seguradora do título do cartão ("NOME - SEGURADORA"); "" se não houver. */
+/** Extrai o nome do cliente do título ("NOME - SEGURADORA"), ignorando marcadores. */
+export function nomeDoTitulo(tituloCartao: string): string {
+  const t = tituloSemMarcadores(tituloCartao);
+  const idx = t.lastIndexOf(" - ");
+  return idx > 0 ? t.slice(0, idx).trim() : t.trim();
+}
+
+/** Extrai a seguradora do título ("NOME - SEGURADORA"), ignorando marcadores; "" se não houver. */
 export function seguradoraDoTitulo(tituloCartao: string): string {
-  const idx = tituloCartao.lastIndexOf(" - ");
-  return idx > 0 ? tituloCartao.slice(idx + 3).trim() : "";
+  const t = tituloSemMarcadores(tituloCartao);
+  const idx = t.lastIndexOf(" - ");
+  return idx > 0 ? t.slice(idx + 3).trim() : "";
 }

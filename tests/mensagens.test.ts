@@ -35,3 +35,16 @@ test("título sem seguradora: nome inteiro e seguradora vazia", () => {
   assert.equal(nomeDoTitulo("FELIPE RODRIGUES"), "FELIPE RODRIGUES");
   assert.equal(seguradoraDoTitulo("FELIPE RODRIGUES"), "");
 });
+
+test("ignora o marcador NOVO dos cartões manuais", () => {
+  assert.equal(
+    nomeDoTitulo("MARIA SILVA - NOVO - PORTO SEGURO"),
+    "MARIA SILVA",
+  );
+  assert.equal(
+    seguradoraDoTitulo("MARIA SILVA - NOVO - PORTO SEGURO"),
+    "PORTO SEGURO",
+  );
+  // Case-insensitive.
+  assert.equal(nomeDoTitulo("JOÃO - novo - AZUL SEGUROS"), "JOÃO");
+});
