@@ -21,6 +21,11 @@ interface TrelloOrg {
   name: string;
   displayName: string;
 }
+interface TrelloWebhook {
+  id: string;
+  idModel: string;
+  callbackURL: string;
+}
 interface TrelloList {
   id: string;
   name: string;
@@ -167,6 +172,31 @@ export class TrelloDestino implements DestinoCartoes {
       pos: "bottom",
     });
     return { id: criada.id, nome: criada.name };
+  }
+
+  /**
+   * Garante que existe um webhook do Trello apontando para `callbackURL` no quadro.
+   * Idempotente: se já houver um (mesmo idModel + callbackURL), não cria outro.
+   */
+  async garantirWebhook(
+    quadro: QuadroRef,
+    callbackURL: string,
+  ): Promise<"criado" | "existente"> {
+    const webhooks = await this.chamar<TrelloWebhook[]>(
+      "GET",
+      `/tokens/${this.opcoes.token}/webhooks`,
+    );
+    const jaExiste = webhooks.some(
+      (w) => w.idModel === quadro.id && w.callbackURL === callbackURL,
+    );
+    if (jaExiste) return "existente";
+
+    await this.chamar<TrelloWebhook>("POST", "/webhooks", {
+      description: `app-thesmart — ${quadro.nome}`,
+      callbackURL,
+      idModel: quadro.id,
+    });
+    return "criado";
   }
 
   /** Busca um cartão pelo id (nome + descrição) — usado pelo webhook. */

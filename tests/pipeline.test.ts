@@ -92,6 +92,10 @@ test("deriva os nomes do arquivo e cria um cartão por cliente", async () => {
   );
 
   assert.equal(resultado.quadro, "AGOSTO - PROCESSO DE VENDA");
+  assert.deepEqual(resultado.quadroRef, {
+    id: "q1",
+    nome: "AGOSTO - PROCESSO DE VENDA",
+  });
   assert.equal(resultado.lista, "RENOVAÇÕES - AGOSTO");
   assert.deepEqual(destino.quadros, ["AGOSTO - PROCESSO DE VENDA"]);
   // A lista de renovações vem primeiro, seguida das listas do fluxo.

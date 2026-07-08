@@ -8,6 +8,7 @@ import type {
   DestinoCartoes,
   ExtratorClientes,
   LeitorRelatorio,
+  QuadroRef,
 } from "../domain/types";
 
 export interface DependenciasPipeline {
@@ -21,6 +22,8 @@ export interface DependenciasPipeline {
 export interface ResultadoProcessamento {
   mes: string;
   quadro: string;
+  /** Referência do quadro (com id) — usada para registrar o webhook. */
+  quadroRef: QuadroRef;
   lista: string;
   /** Cartões criados nesta execução. */
   cartoes: CartaoRef[];
@@ -111,6 +114,7 @@ export async function processarRelatorio(
   return {
     mes,
     quadro: tituloQuadro,
+    quadroRef: quadro,
     lista: tituloLista,
     cartoes,
     pulados,

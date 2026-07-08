@@ -72,9 +72,11 @@ na descrição do cartão e envia uma mensagem no **WhatsApp** desse cliente, vi
 2. Hospede e suba o serviço: `npm run build && npm run webhook:serve`.
 3. Abra a URL pública no navegador e **escaneie o QR** com o WhatsApp do número dedicado
    (Aparelhos conectados ▸ Conectar um aparelho). A sessão fica salva em `whatsapp-auth/`.
-4. Registre o webhook no Trello, apontando para o quadro:
-   `npm run webhook:registrar <idOuShortLinkDoQuadro>` (o shortLink é o código da URL do
-   quadro: `trello.com/b/<shortLink>/...`). Use `--listar` para ver os webhooks já criados.
+4. **Registro do webhook:** se `WEBHOOK_CALLBACK_URL` também estiver no `.env` da máquina
+   que roda a GUI/CLI, o webhook é **registrado automaticamente** para o quadro toda vez
+   que um relatório é processado (idempotente — não duplica). Assim, cada mês novo já
+   registra sozinho. Para registrar manualmente (ou ver/limpar), use
+   `npm run webhook:registrar <idOuShortLinkDoQuadro>` (`--listar` mostra os existentes).
 
 Pronto: mover um cartão para uma lista-alvo dispara a mensagem no WhatsApp.
 
