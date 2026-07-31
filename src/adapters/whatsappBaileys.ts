@@ -60,14 +60,32 @@ export class WhatsappBaileys implements Notificador {
       pasta: string,
     ) => Promise<{ state: unknown; saveCreds: () => Promise<void> }>;
     const DisconnectReason = baileys.DisconnectReason as { loggedOut: number };
+    const fetchLatestBaileysVersion =
+      baileys.fetchLatestBaileysVersion as () => Promise<{
+        version: number[];
+      }>;
 
     fs.mkdirSync(this.opcoes.pastaAuth, { recursive: true });
     const { state, saveCreds } = await useMultiFileAuthState(
       this.opcoes.pastaAuth,
     );
 
+    // Usa a versão ATUAL do WhatsApp Web (a embutida no Baileys pode ficar
+    // desatualizada e causar loop de "conexão caiu" sem gerar QR).
+    let version: number[] | undefined;
+    try {
+      version = (await fetchLatestBaileysVersion()).version;
+      this.log(`Usando WhatsApp Web v${version.join(".")}`);
+    } catch {
+      this.log("Não consegui buscar a versão do WhatsApp Web; usando o padrão.");
+    }
+
     const conectar = (): void => {
-      this.sock = makeWASocket({ auth: state, logger: loggerSilencioso });
+      this.sock = makeWASocket({
+        version,
+        auth: state,
+        logger: loggerSilencioso,
+      });
       this.sock!.ev.on("creds.update", () => void saveCreds());
       this.sock!.ev.on("connection.update", (u: unknown) => {
         const { connection, lastDisconnect, qr } = u as {
@@ -92,8 +110,10 @@ export class WhatsappBaileys implements Notificador {
               "WhatsApp deslogado — apague a pasta whatsapp-auth e reescaneie.",
             );
           } else {
-            this.log("Conexão caiu; reconectando...");
-            conectar();
+            this.log(
+              `Conexão caiu (código ${codigo ?? "?"}); reconectando em 3s...`,
+            );
+            setTimeout(conectar, 3000);
           }
         }
       });
