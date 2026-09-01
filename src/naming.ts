@@ -37,8 +37,25 @@ export function mesDoArquivo(caminhoArquivo: string): string {
   return mes.toUpperCase();
 }
 
-export function nomeQuadro(mes: string): string {
-  return `${mes} - PROCESSO DE VENDA`;
+/**
+ * Descobre o ano a partir do nome do arquivo do relatório.
+ * Ex.: "Relatorio_renovacao_Agosto-2026.pdf" -> 2026
+ *
+ * Procura um ano de 4 dígitos (19xx/20xx) que não faça parte de uma sequência
+ * maior de dígitos (assim "20260831_..." não vira "2026") e usa o último, que
+ * é o que costuma vir logo depois do mês. Sem ano no nome, assume o ano atual.
+ */
+export function anoDoArquivo(caminhoArquivo: string): number {
+  const base = path.basename(caminhoArquivo);
+  const achados = base.match(/(?<!\d)(?:19|20)\d{2}(?!\d)/g);
+  if (!achados || achados.length === 0) {
+    return new Date().getFullYear();
+  }
+  return Number(achados[achados.length - 1]);
+}
+
+export function nomeQuadro(mes: string, ano: number): string {
+  return `${mes} ${ano} - PROCESSO DE VENDA`;
 }
 
 export function nomeLista(mes: string): string {

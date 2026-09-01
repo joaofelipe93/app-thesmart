@@ -5,10 +5,10 @@ Lê um relatório de renovação em **PDF**, extrai os clientes usando **OpenAI*
 ## Fluxo
 
 1. Você roda a app passando o PDF (ex.: `Relatorio_renovacao_Agosto-2026.pdf`).
-2. O mês é detectado pelo nome do arquivo (`Agosto`).
+2. O mês e o ano são detectados pelo nome do arquivo (`Agosto`, `2026`). Sem ano no nome, assume o ano atual.
 3. O texto do PDF é extraído e enviado para a OpenAI, que devolve cada cliente com **nome**, **vencimento** (a data que aparece acima do nome) e demais **detalhes**, em JSON.
 4. No Trello:
-   - cria (ou reaproveita) o quadro **AGOSTO - PROCESSO DE VENDA**;
+   - cria (ou reaproveita) o quadro **AGOSTO 2026 - PROCESSO DE VENDA** (o ano no nome evita misturar agosto de anos diferentes no mesmo quadro);
    - cria (ou reaproveita) a lista **RENOVAÇÕES - AGOSTO**;
    - para cada cliente, cria um **cartão** (dados na descrição) com:
      - um **checklist "Processo de Renovação"**: FAZER COTAÇÃO, FALAR COM O CLIENTE, TRANSMITIR PROPOSTAS, ACOMPANHAR TRANSMISSÃO DE PROPOSTAS, BAIXAR APÓLICE;
@@ -88,8 +88,8 @@ npm test          # roda os testes (sem rede)
 npm run typecheck # checagem de tipos
 ```
 
-Em ambos os casos, basta o nome do arquivo conter o mês (ex.: `..._Setembro-2026.pdf`)
-para o quadro/lista serem nomeados automaticamente (`SETEMBRO - PROCESSO DE VENDA`,
+Em ambos os casos, basta o nome do arquivo conter o mês e o ano (ex.: `..._Setembro-2026.pdf`)
+para o quadro/lista serem nomeados automaticamente (`SETEMBRO 2026 - PROCESSO DE VENDA`,
 `RENOVAÇÕES - SETEMBRO`).
 
 ## Variáveis de ambiente
