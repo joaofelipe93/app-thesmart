@@ -40,7 +40,7 @@ Requer **Node 18+** (usa `fetch` nativo) e um `.env` (veja `.env.example`): `OPE
 
 Detalhes que só se entende lendo o código:
 
-1. **Mês vem do nome do arquivo** (`naming.ts`): `..._Agosto-2026.pdf` → `AGOSTO`, definindo quadro `AGOSTO - PROCESSO DE VENDA` e lista `RENOVAÇÕES - AGOSTO`. Normaliza acento (`Marco` casa com `MARÇO`); sem mês reconhecível, lança erro.
+1. **Mês e ano vêm do nome do arquivo** (`naming.ts`): `..._Agosto-2026.pdf` → `AGOSTO` + `2026`, definindo quadro `AGOSTO 2026 - PROCESSO DE VENDA` e lista `RENOVAÇÕES - AGOSTO`. Normaliza acento (`Marco` casa com `MARÇO`); sem mês reconhecível, lança erro. O ano é o último número de 4 dígitos (19xx/20xx) que não esteja grudado em outros dígitos (`20260831_...` não conta) — **o ano fica no nome do quadro para não misturar agosto de anos diferentes no mesmo quadro**; sem ano no nome, assume o ano atual.
 2. **`pdf-parse` é importado pelo subcaminho** `pdf-parse/lib/pdf-parse.js` de propósito (evita o debug do `index` do pacote); por isso existe `src/types/pdf-parse-lib.d.ts`. PDF sem texto (imagem) lança erro — não há OCR.
 3. **Extração com schema flexível**: `chat.completions`, `response_format: json_object`, `temperature: 0`. Cada `Cliente` é `nome` (título do cartão) + `vencimento` opcional (a data que aparece **logo acima do nome** no relatório, dd/mm/aaaa → vira a etiqueta) + `detalhes` (mapa livre → descrição markdown). Os campos de `detalhes` são desconhecidos de propósito; se o relatório for padronizado, vale travar o schema.
 4. **Trello** (`adapters/trelloDestino.ts`): REST via `fetch`, `key`+`token` na query; a API responde `name`/`url`, mapeados para `nome`/`url` do domínio. Pontos a saber:

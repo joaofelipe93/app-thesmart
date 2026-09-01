@@ -1,4 +1,4 @@
-import { mesDoArquivo, nomeQuadro, nomeLista } from "../naming";
+import { mesDoArquivo, anoDoArquivo, nomeQuadro, nomeLista } from "../naming";
 import { descricaoDoCartao, tituloDoCartao } from "../domain/formatters";
 import { ETAPAS_RENOVACAO, NOME_CHECKLIST } from "../domain/etapas";
 import { LISTAS_FLUXO } from "../domain/listas";
@@ -21,6 +21,7 @@ export interface DependenciasPipeline {
 
 export interface ResultadoProcessamento {
   mes: string;
+  ano: number;
   quadro: string;
   /** Referência do quadro (com id) — usada para registrar o webhook. */
   quadroRef: QuadroRef;
@@ -45,7 +46,8 @@ export async function processarRelatorio(
   const log = deps.log ?? (() => {});
 
   const mes = mesDoArquivo(caminhoArquivo);
-  log(`Mês detectado: ${mes}`);
+  const ano = anoDoArquivo(caminhoArquivo);
+  log(`Mês detectado: ${mes} de ${ano}`);
 
   log("Lendo o relatório...");
   const texto = await deps.leitor.lerTexto(caminhoArquivo);
@@ -60,7 +62,7 @@ export async function processarRelatorio(
       ".",
   );
 
-  const tituloQuadro = nomeQuadro(mes);
+  const tituloQuadro = nomeQuadro(mes, ano);
   const tituloLista = nomeLista(mes);
 
   log(`Preparando o quadro "${tituloQuadro}"...`);
@@ -113,6 +115,7 @@ export async function processarRelatorio(
 
   return {
     mes,
+    ano,
     quadro: tituloQuadro,
     quadroRef: quadro,
     lista: tituloLista,
